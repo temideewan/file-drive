@@ -21,7 +21,7 @@ export default function Home() {
         </SignInButton>
       </SignedOut>
       {files?.map((file) => {
-        return <div key={file.id}> {file.name}</div>
+        return <div key={file._id}> {file.name}</div>
       })}
       <Button onClick={() => createFile({ name: "Hello world" })}>Click me</Button>
     </main>
