@@ -1,13 +1,40 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { QueryOrMutation } from "./files";
 
+export async function getUser(ctx: QueryOrMutation, tokenIdentifier: string) {
+  const user = await ctx.db
+      .query("users")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", tokenIdentifier)
+      )
+      .first();
+    if (!user){
+      throw new ConvexError("Expected a user to be available");
+    }
+    return user;
+}
 export const createUser = internalMutation({
-  args:{
+  args: {
     tokenIdentifier: v.string(),
   },
   async handler(ctx, args) {
-    console.log(args.tokenIdentifier);
-    
+    await ctx.db.insert("users", {
+      tokenIdentifier: args.tokenIdentifier,
+      orgIds: [],
+    });
+  },
+});
+export const addOrgIdToUser = internalMutation({
+  args: {
+    tokenIdentifier: v.string(),
+    orgId: v.string(),
+  },
+  async handler(ctx, args) {
+    const user = await getUser(ctx, args.tokenIdentifier);
 
-  }
-})
+    await ctx.db.patch(user._id, {
+      orgIds: [...user.orgIds, args.orgId],
+    });
+  },
+});
