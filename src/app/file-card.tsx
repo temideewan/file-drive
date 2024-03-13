@@ -25,20 +25,21 @@ import {
 } from "@/components/ui/alert-dialog"
 
 
-import { Doc } from "../../convex/_generated/dataModel"
+import { Doc, Id } from "../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
-import { MoreVertical, TrashIcon } from "lucide-react"
-import { useState } from "react"
+import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, TrashIcon } from "lucide-react"
+import { ReactNode, useState } from "react"
 import { useMutation } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
+import Image from "next/image"
 
 
 
-function FileCardActions({file}: {file: Doc<"files"> }) {
+function FileCardActions({ file }: { file: Doc<"files"> }) {
   const deleteFile = useMutation(api.files.deleteFile)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
-  const {toast} = useToast();
+  const { toast } = useToast();
   return <>
     <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
       <AlertDialogContent>
@@ -51,9 +52,9 @@ function FileCardActions({file}: {file: Doc<"files"> }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={async () =>{
+          <AlertDialogAction onClick={async () => {
             // TODO: delete the file
-            await deleteFile({fileId: file._id, storageId: file.fileId})
+            await deleteFile({ fileId: file._id, storageId: file.fileId })
             toast({
               title: "File deleted",
               description: "That file is now deleted successfully",
@@ -74,17 +75,52 @@ function FileCardActions({file}: {file: Doc<"files"> }) {
   </>
 
 }
-export function FileCard({ file }: {file: Doc<"files"> } ) {
+
+function getFileUrl(fileId: Id<"_storage">) {
+  return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`
+  // https://harmless-cod-256.convex.cloud/api/storage/14f6471a-87a4-40ee-bbb3-3dc5def7d759
+}
+export function FileCard({ file }: { file: Doc<"files"> }) {
+  const typeIcons = {
+    "image": <ImageIcon />,
+    "csv": <GanttChartIcon />,
+    "pdf": <FileTextIcon />,
+  } as Record<Doc<"files">["type"], ReactNode>
   return <Card>
     <CardHeader>
-      <CardTitle className="flex justify-between items-center">{file.name} <FileCardActions file={file}/></CardTitle>
+      <CardTitle className="flex justify-between items-center">
+        <div className="flex gap-2">
+          <p>{typeIcons[file.type]}</p>
+          <p>
+            {file.name}
+          </p>
+        </div> <FileCardActions file={file} /></CardTitle>
       {/* <CardDescription>Card Description</CardDescription> */}
     </CardHeader>
-    <CardContent>
-      <p>Card Content</p>
+    <CardContent className="h-[200px] flex justify-center items-center">
+      {file.type === 'image' ?
+        <Image
+          alt={file.name}
+          width={200}
+          height={100}
+          src={getFileUrl(file.fileId)}
+        /> :
+         null
+      }
+      {file.type === 'csv' ?
+        <GanttChartIcon className="w-20 h-20" /> :
+         null
+      }
+      {file.type === 'pdf' ?
+        <FileTextIcon className="w-20 h-20" /> :
+         null
+      }
     </CardContent>
-    <CardFooter>
-      <Button>Download</Button>
+    <CardFooter className="flex justify-center">
+      <Button className="w-full sm:w-min" onClick={() => {
+        // open a new tab to the file location on convex
+        window.open(getFileUrl(file.fileId), "_blank")
+      }}>Download</Button>
     </CardFooter>
   </Card>
 
