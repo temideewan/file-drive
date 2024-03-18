@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -25,12 +26,12 @@ import {
 } from "@/components/ui/alert-dialog"
 
 
-import { Doc, Id } from "../../convex/_generated/dataModel"
+import { Doc, Id } from "../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
-import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, TrashIcon } from "lucide-react"
+import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarIcon, TrashIcon } from "lucide-react"
 import { ReactNode, useState } from "react"
 import { useMutation } from "convex/react"
-import { api } from "../../convex/_generated/api"
+import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 
@@ -53,7 +54,6 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={async () => {
-            // TODO: delete the file
             await deleteFile({ fileId: file._id, storageId: file.fileId })
             toast({
               title: "File deleted",
@@ -69,6 +69,8 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
     <DropdownMenu>
       <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
       <DropdownMenuContent>
+        <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { }}> <StarIcon className="h-4" /> Favorite</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem className="flex gap-1 items-center text-red-600 cursor-pointer" onClick={() => setIsConfirmOpen(true)}> <TrashIcon className="h-4" /> Delete</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -105,15 +107,15 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
           height={100}
           src={getFileUrl(file.fileId)}
         /> :
-         null
+        null
       }
       {file.type === 'csv' ?
         <GanttChartIcon className="w-20 h-20" /> :
-         null
+        null
       }
       {file.type === 'pdf' ?
         <FileTextIcon className="w-20 h-20" /> :
-         null
+        null
       }
     </CardContent>
     <CardFooter className="flex justify-center">
