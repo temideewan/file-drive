@@ -24,7 +24,7 @@ function PlaceHolder() {
   </div>
 }
 
-export function FileBrowser({title, isFavorites}: {title: string, isFavorites?: boolean}) {
+export function FileBrowser({ title, isFavorites }: { title: string, isFavorites?: boolean }) {
 
   // Auth related logic
   const organization = useOrganization();
@@ -39,6 +39,8 @@ export function FileBrowser({title, isFavorites}: {title: string, isFavorites?: 
   const files = useQuery(api.files.getFiles, orgId ? { orgId, query, isFavorites } : 'skip');
   // UI
   const isLoading = files === undefined
+  const favorites = useQuery(api.files.getAllFavorites, orgId ? { orgId, } : 'skip');
+
   return (
 
     <>
@@ -66,7 +68,7 @@ export function FileBrowser({title, isFavorites}: {title: string, isFavorites?: 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {files?.map((file) => {
-              return <FileCard key={file._id} file={file} />
+              return <FileCard key={file._id} file={file} favorites={favorites}/>
             })}
           </div>
         </>
