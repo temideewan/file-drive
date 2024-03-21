@@ -24,7 +24,7 @@ function PlaceHolder() {
   </div>
 }
 
-export function FileBrowser({title}: {title: string}) {
+export function FileBrowser({title, isFavorites}: {title: string, isFavorites?: boolean}) {
 
   // Auth related logic
   const organization = useOrganization();
@@ -36,7 +36,7 @@ export function FileBrowser({title}: {title: string}) {
     orgId = organization.organization?.id ?? user.user?.id
   }
   // skip the query if there's no organization yet
-  const files = useQuery(api.files.getFiles, orgId ? { orgId, query } : 'skip');
+  const files = useQuery(api.files.getFiles, orgId ? { orgId, query, isFavorites } : 'skip');
   // UI
   const isLoading = files === undefined
   return (
@@ -76,13 +76,3 @@ export function FileBrowser({title}: {title: string}) {
   );
 }
 
-{/* <SignedIn>
-  <SignOutButton>
-    <Button>Sign out</Button>
-  </SignOutButton>
-</SignedIn>
-<SignedOut>
-  <SignInButton mode="modal">
-    <Button>Sign in</Button>
-  </SignInButton>
-</SignedOut> */}

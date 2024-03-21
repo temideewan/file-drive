@@ -60,6 +60,7 @@ export const getFiles = query({
   args: {
     orgId: v.string(),
     query: v.optional(v.string()),
+    isFavorites: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -76,39 +77,35 @@ export const getFiles = query({
     if (!hasAccess) {
       return [];
     }
-    const files = ctx.db
+    let files = await ctx.db
       .query("files")
       .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
     const query = args.query;
     if (query) {
-      return (await files).filter((file) =>
+      files =  files.filter((file) =>
         file.name.toLowerCase().includes(query.toLowerCase())
       );
-    } else {
-      return files;
+    } 
+
+    if(args.isFavorites){
+      const user = await ctx.db.query("users").withIndex("by_tokenIdentifier", q => q.eq("tokenIdentifier", identity.tokenIdentifier)).first();
+      if(!user) return files;
+      const favorites = await ctx.db.query("favorites").withIndex("by_userId_orgId_fileId", q => q.eq("userId", user?._id).eq("orgId", args.orgId)).collect();
+      files = files.filter((file) => favorites.some((f) => f.fileId === file._id))
     }
+
+    return files
   },
 });
 
 export const deleteFile = mutation({
   args: { fileId: v.id("files"), storageId: v.id("_storage") },
   async handler(ctx, args) {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError("You must be logged in to delete a file");
-    }
-    const file = await ctx.db.get(args.fileId);
-
-    if (!file) throw new ConvexError("This file does not exist");
-    const hasAccess = await hasAccessToOrg(
-      ctx,
-      identity.tokenIdentifier,
-      file.orgId
-    );
-    if (!hasAccess) {
-      throw new ConvexError("You do not have access to delete this file");
-    }
+    const access = await hasAccessToFile(ctx, args.fileId);
+   if(!access) {
+    throw new ConvexError("No access to file ");
+   }
     await ctx.db.delete(args.fileId);
     await ctx.storage.delete(args.storageId);
   },

@@ -39,6 +39,7 @@ import Image from "next/image"
 
 function FileCardActions({ file }: { file: Doc<"files"> }) {
   const deleteFile = useMutation(api.files.deleteFile)
+  const toggleFavorite = useMutation(api.files.toggleFavorite)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const { toast } = useToast();
   return <>
@@ -69,7 +70,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
     <DropdownMenu>
       <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { }}> <StarIcon className="h-4" /> Favorite</DropdownMenuItem>
+        <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { toggleFavorite({ fileId: file._id, storageId: file.fileId }) }}> <StarIcon className="h-4" /> Favorite</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="flex gap-1 items-center text-red-600 cursor-pointer" onClick={() => setIsConfirmOpen(true)}> <TrashIcon className="h-4" /> Delete</DropdownMenuItem>
       </DropdownMenuContent>
