@@ -34,6 +34,7 @@ import { useMutation } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
+import { Protect } from "@clerk/nextjs"
 
 
 
@@ -71,8 +72,13 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
       <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { toggleFavorite({ fileId: file._id, storageId: file.fileId }) }}> {!isFavorited ? (<><StarHalf className="h-4" /> Favorite</>) : <><StarIcon className="h-4" /> Unfavorite </>}</DropdownMenuItem>
+        {/* <Protect
+          permission="org:invoices:create"
+          fallback={<></>}
+        > */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="flex gap-1 items-center text-red-600 cursor-pointer" onClick={() => setIsConfirmOpen(true)}> <TrashIcon className="h-4" /> Delete</DropdownMenuItem>
+          <DropdownMenuItem className="flex gap-1 items-center text-red-600 cursor-pointer" onClick={() => setIsConfirmOpen(true)}> <TrashIcon className="h-4" /> Delete</DropdownMenuItem>
+        {/* </Protect> */}
       </DropdownMenuContent>
     </DropdownMenu>
   </>
@@ -83,13 +89,13 @@ function getFileUrl(fileId: Id<"_storage">) {
   return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`
   // https://harmless-cod-256.convex.cloud/api/storage/14f6471a-87a4-40ee-bbb3-3dc5def7d759
 }
-export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: Doc<"favorites">[] }) {
+export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: Doc<"favorites">[] | undefined }) {
   const typeIcons = {
     "image": <ImageIcon />,
     "csv": <GanttChartIcon />,
     "pdf": <FileTextIcon />,
   } as Record<Doc<"files">["type"], ReactNode>
-  const isFavorited = favorites.some(f => f.fileId === file._id)
+  const isFavorited = favorites ? favorites.some(f => f.fileId === file._id) : false;
   return <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center">

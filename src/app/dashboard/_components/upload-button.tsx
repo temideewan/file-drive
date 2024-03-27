@@ -52,7 +52,6 @@ export default function UploadButton() {
 
     try {
       const postUrl = await generateUploadUrl();
-      console.log(postUrl)
 
       const fileType = values.file[0].type;
       const result = await fetch(postUrl, {
@@ -62,7 +61,6 @@ export default function UploadButton() {
       });
       const { storageId } = await result.json();
 
-      console.log(fileType);
       const types = {
         "image/jpeg": "image",
         "image/png": "image",
