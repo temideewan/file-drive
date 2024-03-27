@@ -28,7 +28,8 @@ async function hasAccessToOrg(ctx: QueryOrMutation, orgId: string) {
   if (!user) return null;
 
   const hasAccess =
-    user.orgIds.some(item => item.orgId === orgId) || user.tokenIdentifier.includes(orgId);
+    user.orgIds.some((item) => item.orgId === orgId) ||
+    user.tokenIdentifier.includes(orgId);
   if (!hasAccess) {
     return null;
   }
@@ -61,6 +62,7 @@ export const getFiles = query({
     orgId: v.string(),
     query: v.optional(v.string()),
     isFavorites: v.optional(v.boolean()),
+    isDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const access = await hasAccessToOrg(ctx, args.orgId);
@@ -89,6 +91,20 @@ export const getFiles = query({
         favorites.some((f) => f.fileId === file._id)
       );
     }
+    if (args.isFavorites) {
+      const favorites = await ctx.db
+        .query("favorites")
+        .withIndex("by_userId_orgId_fileId", (q) =>
+          q.eq("userId", access.user?._id).eq("orgId", args.orgId)
+        )
+        .collect();
+      files = files.filter((file) =>
+        favorites.some((f) => f.fileId === file._id)
+      );
+    }
+    if (args.isDeleted) {
+      files = files.filter((file) => file.shouldDelete);
+    }
 
     return files;
   },
@@ -102,12 +118,15 @@ export const deleteFile = mutation({
       throw new ConvexError("No access to file ");
     }
     // either you're an admin in your organization or you're deleting files from personal storage
-    const isAdmin = access.user.orgIds.find((org) => org.orgId === access.file.orgId)?.role == "admin" || access.user.tokenIdentifier.includes(access.file.orgId);
-    if(!isAdmin){
+    const isAdmin =
+      access.user.orgIds.find((org) => org.orgId === access.file.orgId)?.role ==
+        "admin" || access.user.tokenIdentifier.includes(access.file.orgId);
+    if (!isAdmin) {
       throw new ConvexError("You do not have access to delete this file");
     }
-    await ctx.db.delete(args.fileId);
-    await ctx.storage.delete(args.storageId);
+    await ctx.db.patch(args.fileId, {
+      shouldDelete: true,
+    })
   },
 });
 

@@ -24,7 +24,7 @@ function PlaceHolder() {
   </div>
 }
 
-export function FileBrowser({ title, isFavorites }: { title: string, isFavorites?: boolean }) {
+export function FileBrowser({ title, isFavorites, isDeleted }: { title: string, isFavorites?: boolean, isDeleted?: boolean }) {
 
   // Auth related logic
   const organization = useOrganization();
@@ -36,7 +36,7 @@ export function FileBrowser({ title, isFavorites }: { title: string, isFavorites
     orgId = organization.organization?.id ?? user.user?.id
   }
   // skip the query if there's no organization yet
-  const files = useQuery(api.files.getFiles, orgId ? { orgId, query, isFavorites } : 'skip');
+  const files = useQuery(api.files.getFiles, orgId ? { orgId, query, isFavorites, isDeleted } : 'skip');
   // UI
   const isLoading = files === undefined
   const favorites = useQuery(api.files.getAllFavorites, orgId ? { orgId, } : 'skip');
