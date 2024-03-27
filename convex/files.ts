@@ -104,6 +104,8 @@ export const getFiles = query({
     }
     if (args.isDeleted) {
       files = files.filter((file) => file.shouldDelete);
+    } else {
+      files = files.filter((file) => !file.shouldDelete);
     }
 
     return files;
