@@ -187,3 +187,15 @@ async function hasAccessToFile(
 
   return { user: hasAccess.user, file };
 }
+
+export const getStorageUrl = query({
+  args: {fileId: v.id("_storage")},
+  async handler (ctx, args) {
+    const url = await ctx.storage.getUrl(args.fileId)
+    if(!url){
+      throw new ConvexError("That file does not exist")
+    }
+
+    return url
+  }
+})

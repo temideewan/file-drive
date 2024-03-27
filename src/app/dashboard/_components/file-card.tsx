@@ -30,7 +30,7 @@ import { Doc, Id } from "../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
 import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarHalf, StarIcon, TrashIcon } from "lucide-react"
 import { ReactNode, useState } from "react"
-import { useMutation } from "convex/react"
+import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -85,17 +85,15 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
 
 }
 
-function getFileUrl(fileId: Id<"_storage">) {
-  return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`
-  // https://harmless-cod-256.convex.cloud/api/storage/14f6471a-87a4-40ee-bbb3-3dc5def7d759
-}
 export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: Doc<"favorites">[] | undefined }) {
+  const fileUrl = useQuery(api.files.getStorageUrl, {fileId: file.fileId})
   const typeIcons = {
     "image": <ImageIcon />,
     "csv": <GanttChartIcon />,
     "pdf": <FileTextIcon />,
   } as Record<Doc<"files">["type"], ReactNode>
   const isFavorited = favorites ? favorites.some(f => f.fileId === file._id) : false;
+  const {toast} = useToast();
   return <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center">
@@ -108,12 +106,12 @@ export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: D
       {/* <CardDescription>Card Description</CardDescription> */}
     </CardHeader>
     <CardContent className="h-[200px] flex justify-center items-center">
-      {file.type === 'image' ?
+      {file.type === 'image' && fileUrl ?
         <Image
           alt={file.name}
           width={200}
           height={100}
-          src={getFileUrl(file.fileId)}
+          src={fileUrl}
         /> :
         null
       }
@@ -129,7 +127,14 @@ export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: D
     <CardFooter className="flex justify-center">
       <Button className="w-full sm:w-min" onClick={() => {
         // open a new tab to the file location on convex
-        window.open(getFileUrl(file.fileId), "_blank")
+        if(!fileUrl) {
+          toast({
+            title: "Something went wrong",
+            description: "Your file could not be accessed, try again later!",
+            variant: "destructive"
+          })
+        }
+        window.open(fileUrl, "_blank")
       }}>Download</Button>
     </CardFooter>
   </Card>
