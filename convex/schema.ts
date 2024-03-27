@@ -14,7 +14,8 @@ export default defineSchema({
     fileId: v.id("_storage"),
     shouldDelete: v.optional(v.boolean()),
     type: fileTypes,
-  }).index("by_orgId", ["orgId"]),
+  }).index("by_orgId", ["orgId"])
+  .index("by_shouldDelete", ["shouldDelete"]),
   users: defineTable({
     tokenIdentifier: v.string(),
     orgIds: v.array(v.object({

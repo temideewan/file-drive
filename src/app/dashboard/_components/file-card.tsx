@@ -28,7 +28,7 @@ import {
 
 import { Doc, Id } from "../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
-import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarHalf, StarIcon, TrashIcon } from "lucide-react"
+import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarHalf, StarIcon, TrashIcon, UndoIcon } from "lucide-react"
 import { ReactNode, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
@@ -40,6 +40,7 @@ import { Protect } from "@clerk/nextjs"
 
 function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited: boolean }) {
   const deleteFile = useMutation(api.files.deleteFile)
+  const restoreFile = useMutation(api.files.restoreFile)
   const toggleFavorite = useMutation(api.files.toggleFavorite)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const { toast } = useToast();
@@ -71,13 +72,30 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
       <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { toggleFavorite({ fileId: file._id, storageId: file.fileId }) }}> {!isFavorited ? (<><StarHalf className="h-4" /> Favorite</>) : <><StarIcon className="h-4" /> Unfavorite </>}</DropdownMenuItem>
-        {/* <Protect
-          permission="org:invoices:create"
+        <Protect
+          role="org:admin"
           fallback={<></>}
-        > */}
-        <DropdownMenuSeparator />
-          <DropdownMenuItem className="flex gap-1 items-center text-red-600 cursor-pointer" onClick={() => setIsConfirmOpen(true)}> <TrashIcon className="h-4" /> Delete</DropdownMenuItem>
-        {/* </Protect> */}
+        >
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => {
+            if (!file.shouldDelete) {
+              setIsConfirmOpen(true)
+            } else {
+              restoreFile({ fileId: file._id })
+            }
+          }}>
+            {
+              file.shouldDelete ?
+                <div className="text-green-600 flex gap-1 items-center">
+                  <UndoIcon className="h-4 w-4" /> Restore
+                </div> :
+                <div className="text-red-600 flex gap-1 items-center">
+                  <TrashIcon className="h-4 w-4" /> Delete
+                </div>
+            }
+          </DropdownMenuItem>
+        </Protect>
       </DropdownMenuContent>
     </DropdownMenu>
   </>
@@ -85,14 +103,14 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
 }
 
 export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: Doc<"favorites">[] | undefined }) {
-  const fileUrl = useQuery(api.files.getStorageUrl, {fileId: file.fileId})
+  const fileUrl = useQuery(api.files.getStorageUrl, { fileId: file.fileId })
   const typeIcons = {
     "image": <ImageIcon />,
     "csv": <GanttChartIcon />,
     "pdf": <FileTextIcon />,
   } as Record<Doc<"files">["type"], ReactNode>
   const isFavorited = favorites ? favorites.some(f => f.fileId === file._id) : false;
-  const {toast} = useToast();
+  const { toast } = useToast();
   return <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center">
@@ -126,7 +144,7 @@ export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: D
     <CardFooter className="flex justify-center">
       <Button className="w-full sm:w-min" onClick={() => {
         // open a new tab to the file location on convex
-        if(!fileUrl) {
+        if (!fileUrl) {
           toast({
             title: "Something went wrong",
             description: "Your file could not be accessed, try again later!",

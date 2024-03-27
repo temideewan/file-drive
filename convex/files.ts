@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
+import { MutationCtx, QueryCtx, internalMutation, mutation, query } from "./_generated/server";
 import { getUser } from "./users";
 import { fileTypes } from "./schema";
 import { Id } from "./_generated/dataModel";
@@ -128,6 +128,35 @@ export const deleteFile = mutation({
     }
     await ctx.db.patch(args.fileId, {
       shouldDelete: true,
+    })
+  },
+});
+export const deleteAllFiles = internalMutation({
+  args: {  },
+  async handler(ctx, args) {
+    const files = await ctx.db.query('files').withIndex("by_shouldDelete", q => q.eq("shouldDelete", true)).collect();
+    await Promise.all(files.map(async (file) => {
+      await ctx.storage.delete(file.fileId);
+      return await ctx.db.delete(file._id);
+    }))
+  },
+});
+export const restoreFile = mutation({
+  args: { fileId: v.id("files") },
+  async handler(ctx, args) {
+    const access = await hasAccessToFile(ctx, args.fileId);
+    if (!access) {
+      throw new ConvexError("No access to file ");
+    }
+    // either you're an admin in your organization or you're deleting files from personal storage
+    const isAdmin =
+      access.user.orgIds.find((org) => org.orgId === access.file.orgId)?.role ==
+        "admin" || access.user.tokenIdentifier.includes(access.file.orgId);
+    if (!isAdmin) {
+      throw new ConvexError("You do not have access to delete this file");
+    }
+    await ctx.db.patch(args.fileId, {
+      shouldDelete: false,
     })
   },
 });

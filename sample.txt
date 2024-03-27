@@ -1,0 +1,5 @@
+This is a new file that I've just created using vim
+This is in no way scary
+If anybody can, then I can
+And now I'm editing everything I want to.
+The people that use it do not have 2 heads.
