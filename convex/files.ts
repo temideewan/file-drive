@@ -48,11 +48,18 @@ export const createFile = mutation({
     if (!hasAccess) {
       throw new ConvexError("You do not have access to this organization");
     }
+    const fileUrl = await ctx.storage.getUrl(args.fileId);
+    
+if (!fileUrl) {
+  throw new ConvexError("file not found");
+}
     await ctx.db.insert("files", {
       name: args.name,
       orgId: args.orgId,
       fileId: args.fileId,
       type: args.type,
+      userId: hasAccess.user._id,
+      url: fileUrl,
     });
   },
 });
@@ -218,15 +225,3 @@ async function hasAccessToFile(
 
   return { user: hasAccess.user, file };
 }
-
-export const getStorageUrl = query({
-  args: {fileId: v.id("_storage")},
-  async handler (ctx, args) {
-    const url = await ctx.storage.getUrl(args.fileId)
-    if(!url){
-      throw new ConvexError("That file does not exist")
-    }
-
-    return url
-  }
-})

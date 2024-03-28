@@ -1,3 +1,5 @@
+
+import { formatRelative, subDays } from 'date-fns'
 import {
   Card,
   CardContent,
@@ -24,11 +26,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 
 import { Doc, Id } from "../../../../convex/_generated/dataModel"
 import { Button } from "@/components/ui/button"
-import { FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarHalf, StarIcon, TrashIcon, UndoIcon } from "lucide-react"
+import { FileIcon, FileText, FileTextIcon, GanttChartIcon, ImageIcon, MoreVertical, StarHalf, StarIcon, TrashIcon, UndoIcon } from "lucide-react"
 import { ReactNode, useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
@@ -38,7 +41,7 @@ import { Protect } from "@clerk/nextjs"
 
 
 
-function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited: boolean }) {
+function FileCardActions({ file, isFavorited, fileUrl }: { file: Doc<"files">, isFavorited: boolean, fileUrl?: string }) {
   const deleteFile = useMutation(api.files.deleteFile)
   const restoreFile = useMutation(api.files.restoreFile)
   const toggleFavorite = useMutation(api.files.toggleFavorite)
@@ -71,6 +74,19 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
     <DropdownMenu>
       <DropdownMenuTrigger><MoreVertical /></DropdownMenuTrigger>
       <DropdownMenuContent>
+        <DropdownMenuItem className="flex gap-1" onClick={() => {
+            // open a new tab to the file location on convex
+            if (!fileUrl) {
+              toast({
+                title: "Something went wrong",
+                description: "Your file could not be accessed, try again later!",
+                variant: "destructive"
+              })
+            }
+            window.open(fileUrl, "_blank")
+          }} >
+          <FileIcon className="h-4 w-4"/> Download
+        </DropdownMenuItem>
         <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { toggleFavorite({ fileId: file._id, storageId: file.fileId }) }}> {!isFavorited ? (<><StarHalf className="h-4" /> Favorite</>) : <><StarIcon className="h-4" /> Unfavorite </>}</DropdownMenuItem>
         <Protect
           role="org:admin"
@@ -103,7 +119,9 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
 }
 
 export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: Doc<"favorites">[] | undefined }) {
-  const fileUrl = useQuery(api.files.getStorageUrl, { fileId: file.fileId })
+  const userProfile = useQuery(api.users.getUserProfile, {
+    userId: file.userId
+  })
   const typeIcons = {
     "image": <ImageIcon />,
     "csv": <GanttChartIcon />,
@@ -116,19 +134,20 @@ export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: D
       <CardTitle className="flex justify-between items-center">
         <div className="flex gap-2">
           <p>{typeIcons[file.type]}</p>
-          <p>
+          <p className='text-base font-normal'>
             {file.name}
           </p>
-        </div> <FileCardActions file={file} isFavorited={isFavorited} /></CardTitle>
+        </div> <FileCardActions file={file} isFavorited={isFavorited} fileUrl={file.url} /></CardTitle>
       {/* <CardDescription>Card Description</CardDescription> */}
     </CardHeader>
     <CardContent className="h-[200px] flex justify-center items-center">
-      {file.type === 'image' && fileUrl ?
+      {file.type === 'image' && file.url ?
         <Image
           alt={file.name}
           width={200}
           height={100}
-          src={fileUrl}
+          src={file.url}
+          className="h-full object-cover rounded-sm"
         /> :
         null
       }
@@ -141,18 +160,18 @@ export function FileCard({ file, favorites }: { file: Doc<"files">, favorites: D
         null
       }
     </CardContent>
-    <CardFooter className="flex justify-center">
-      <Button className="w-full sm:w-min" onClick={() => {
-        // open a new tab to the file location on convex
-        if (!fileUrl) {
-          toast({
-            title: "Something went wrong",
-            description: "Your file could not be accessed, try again later!",
-            variant: "destructive"
-          })
-        }
-        window.open(fileUrl, "_blank")
-      }}>Download</Button>
+    <CardFooter className="flex justify-between">
+      <div className="flex gap-2 text-xs text-gray-700 w-20 items-center">
+      <Avatar className="w-6 h-6">
+        <AvatarImage src={userProfile?.image} />
+        <AvatarFallback>CN</AvatarFallback>
+      </Avatar>
+      {userProfile?.name}
+      </div>
+      <div className="text-xs text-gray-700">
+      uploaded {formatRelative(file._creationTime, new Date())}
+      </div>
+
     </CardFooter>
   </Card>
 

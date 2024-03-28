@@ -1,7 +1,4 @@
-import Link from "next/link";
 import "../globals.css";
-import { Button } from "@/components/ui/button";
-import { FileIcon, StarIcon } from "lucide-react";
 import { SideNav } from "./side-nav";
 
 // export const metadata: Metadata = {
