@@ -20,7 +20,7 @@ import {
 import { Doc, } from "../../../../convex/_generated/dataModel"
 import { FileIcon, MoreVertical, StarHalf, StarIcon, TrashIcon, UndoIcon } from "lucide-react"
 import { useState } from "react"
-import { useMutation } from "convex/react"
+import { useMutation, useQueries, useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
 import { Protect } from "@clerk/nextjs"
@@ -32,6 +32,7 @@ export default function FileCardActions({ file, isFavorited, fileUrl }: { file: 
   const restoreFile = useMutation(api.files.restoreFile)
   const toggleFavorite = useMutation(api.files.toggleFavorite)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const user = useQuery(api.users.getMe)
   const { toast } = useToast();
   return <>
     <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
@@ -75,7 +76,11 @@ export default function FileCardActions({ file, isFavorited, fileUrl }: { file: 
         </DropdownMenuItem>
         <DropdownMenuItem className="flex gap-1 items-center cursor-pointer" onClick={() => { toggleFavorite({ fileId: file._id, storageId: file.fileId }) }}> {!isFavorited ? (<><StarHalf className="h-4" /> Favorite</>) : <><StarIcon className="h-4" /> Unfavorite </>}</DropdownMenuItem>
         <Protect
-          role="org:admin"
+          condition={(check) => {
+            return check({
+              role: "org:admin"
+            }) || file.userId === user?._id
+          }}
           fallback={<></>}
         >
           <DropdownMenuSeparator />
