@@ -1,6 +1,5 @@
 import { ConvexError, v } from "convex/values";
 import { MutationCtx, QueryCtx, internalMutation, mutation, query } from "./_generated/server";
-import { getUser } from "./users";
 import { fileTypes } from "./schema";
 import { Doc, Id } from "./_generated/dataModel";
 export type QueryOrMutation = QueryCtx | MutationCtx;
