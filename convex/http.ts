@@ -2,8 +2,10 @@ import { httpRouter } from "convex/server";
 
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { getConfiguration } from "../src/config";
 
 const http = httpRouter();
+const { clerkHostName } = getConfiguration();
 
 http.route({
   path: "/clerk",
@@ -25,30 +27,34 @@ http.route({
       switch (result.type) {
         case "user.created":
           await ctx.runMutation(internal.users.createUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.id}`,
-            name: `${result.data.first_name ?? ""} ${result.data.last_name ?? ""}`,
-            image: result.data.image_url
+            tokenIdentifier: `https://${clerkHostName}|${result.data.id}`,
+            name: `${result.data.first_name ?? ""} ${
+              result.data.last_name ?? ""
+            }`,
+            image: result.data.image_url,
           });
           break;
         case "user.updated":
           await ctx.runMutation(internal.users.updateUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.id}`,
-            name: `${result.data.first_name ?? ""} ${result.data.last_name ?? ""}`,
-            image: result.data.image_url
+            tokenIdentifier: `https://${clerkHostName}|${result.data.id}`,
+            name: `${result.data.first_name ?? ""} ${
+              result.data.last_name ?? ""
+            }`,
+            image: result.data.image_url,
           });
           break;
         case "organizationMembership.created":
           await ctx.runMutation(internal.users.addOrgIdToUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.public_user_data.user_id}`,
+            tokenIdentifier: `https://${clerkHostName}|${result.data.public_user_data.user_id}`,
             orgId: result.data.organization.id,
-            role: result.data.role === "org:admin" ? "admin" : 'member',
+            role: result.data.role === "org:admin" ? "admin" : "member",
           });
           break;
         case "organizationMembership.updated":
           await ctx.runMutation(internal.users.updateRoleInOrgForUser, {
-            tokenIdentifier: `https://${process.env.CLERK_HOSTNAME}|${result.data.public_user_data.user_id}`,
+            tokenIdentifier: `https://${clerkHostName}|${result.data.public_user_data.user_id}`,
             orgId: result.data.organization.id,
-            role: result.data.role === "org:admin" ? "admin" : 'member',
+            role: result.data.role === "org:admin" ? "admin" : "member",
           });
           break;
       }
