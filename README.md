@@ -1,36 +1,15 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## File drive 
 
-First, run the development server:
+The project is essentially a file uploads system that explores a couple of interesting technologies
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+I use [Convex](https://www.convex.dev/) a real time hosted backend solution that makes development and managing both the backend and underlying data management a breeze. 
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+I also integrated [Clerk(The most comprehensive User Management Platform)](https://clerk.com/) this is legit one of the best user management solutions that I've used. Makes authentication and other related user management a breeze.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+In the process of connecting CLerk and Convex I also used [Svix](https://www.svix.com/) for the webhooks interaction between both platforms
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+For the User interface I used beautiful components from [Shadcn](https://ui.shadcn.com/) and of course [Tailwind](https://tailwindcss.com/) for all the beautiful interface customizations.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+It's only a dummy application that may not be fully featured yet, but deployment to production is ongoing on [Vercel](https://vercel.com/) and it would be available for user interaction fully [at this location](https://file-drive-murex.vercel.app/)
